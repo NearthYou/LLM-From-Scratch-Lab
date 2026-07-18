@@ -1,0 +1,26 @@
+{
+  "run_date": "2026-07-18",
+  "device": "cpu",
+  "seed": 42,
+  "steps": 5,
+  "config": {
+    "vocab_size": 64,
+    "context_length": 8,
+    "emb_dim": 16,
+    "n_heads": 4,
+    "n_layers": 1,
+    "drop_rate": 0.0,
+    "qkv_bias": false
+  },
+  "initial_loss": 4.308793067932129,
+  "final_loss": 2.670515537261963,
+  "loss_curve": [
+    4.308793067932129,
+    3.898402214050293,
+    3.537956714630127,
+    3.219144344329834,
+    2.9377336502075195,
+    2.670515537261963
+  ],
+  "torch_version": "2.13.0+cpu"
+}
