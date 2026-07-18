@@ -1,0 +1,21 @@
+[project]
+name = "llm-from-scratch-lab"
+version = "0.1.0"
+description = "A tested learning path from NumPy neural-network foundations to a small GPT"
+requires-python = ">=3.11"
+dependencies = [
+  "matplotlib>=3.7",
+  "numpy>=1.24",
+  "torch>=2.0",
+]
+
+[dependency-groups]
+dev = ["pytest>=7.0"]
+
+[tool.pytest.ini_options]
+addopts = "-ra"
+testpaths = [
+  "foundations/mnist_numpy/tests",
+  "gpt/tests",
+  "tests",
+]
