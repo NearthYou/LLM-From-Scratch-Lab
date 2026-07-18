@@ -1,5 +1,121 @@
-# LLM from Scratch Lab
+# LLM From Scratch Lab
 
-This repository reorganizes learning code from [`Soldbone/gpt-lab`](https://github.com/Soldbone/gpt-lab) and [`devhyun05/group4-mnist-lab`](https://github.com/devhyun05/group4-mnist-lab).
+A curated, testable learning path from NumPy neural-network foundations to byte-level BPE and a compact GPT. This repository separates historical GPU experiment artifacts from a deterministic CPU smoke run, and preserves source attribution instead of presenting team work as a solo implementation.
 
-The reproducible evidence package is being prepared on the `build/evidence` branch.
+## 한국어 요약
+
+NumPy로 만든 MNIST 신경망에서 출발해 BPE, embedding, causal multi-head attention, GPT 사전학습·생성, 감성 분류 미세조정 유틸리티까지 이어지는 학습 결과를 한 저장소에서 검증할 수 있도록 재구성했습니다. 핵심은 결과를 많이 나열하는 것이 아니라, 구현 범위·개인 기여·과거 실험·현재 재현을 서로 섞지 않는 것입니다.
+
+## 왜 별도 저장소인가
+
+원본은 두 개의 팀 과제 저장소에 나뉘어 있습니다.
+
+- GPT 원본: [`Soldbone/gpt-lab`](https://github.com/Soldbone/gpt-lab)
+- 개인 이력 보존 fork: [`NearthYou/gpt-lab`](https://github.com/NearthYou/gpt-lab)
+- NumPy/MNIST 원본: [`devhyun05/group4-mnist-lab`](https://github.com/devhyun05/group4-mnist-lab)
+
+이 저장소는 두 과제의 학습 흐름을 연결하되 원본 Git 이력을 대체하지 않습니다. 개인 구현으로 확인되는 범위는 commit 단위로 표시하고, BPE·embedding·attention·GPT backbone 등 팀 단위 핵심 구현은 공동 결과로 명시합니다. 재배포 동의와 라이선스 경계는 [ATTRIBUTION.md](ATTRIBUTION.md)에 기록했습니다.
+
+## 학습 흐름
+
+```text
+NumPy tensors
+  -> Affine / BatchNorm / ReLU / Dropout
+  -> Softmax + Cross Entropy
+  -> SGD / Adam
+  -> MNIST classifier
+
+text
+  -> byte-level BPE
+  -> token ids + positional ids
+  -> embeddings
+  -> causal multi-head attention
+  -> residual Transformer blocks
+  -> language-model head
+  -> next-token loss / generation
+  -> sentiment classifier fine-tuning utilities
+```
+
+자세한 데이터 흐름과 모듈 경계는 [docs/architecture.md](docs/architecture.md)에 있습니다.
+
+## 구현 범위
+
+| 영역 | 구현·검증 범위 | 위치 |
+| --- | --- | --- |
+| NumPy 기초 | Affine, ReLU, Softmax, BatchNorm, Dropout, cross entropy, SGD, Adam, 학습 루프 | `foundations/mnist_numpy/` |
+| Tokenization | byte-level BPE 학습, encode/decode, vocabulary·merge rule | `gpt/src/bpe.py` |
+| GPT | token/position embedding, causal multi-head attention, LayerNorm, FFN, residual blocks, LM head | `gpt/src/` |
+| Training | loss 계산, checkpoint, 생성, pretraining loop | `gpt/src/train.py` |
+| Fine-tuning | 감성 데이터셋·분류 헤드·학습 및 평가 유틸리티 | `gpt/src/finetune.py` |
+| 증빙 | 현재 CPU smoke JSON, 과거 GPU run의 선택 아티팩트, 기여 commit map | `artifacts/`, `docs/` |
+
+## 빠른 검증
+
+Python 3.11과 [`uv`](https://docs.astral.sh/uv/)를 기준으로 합니다.
+
+```bash
+uv sync
+uv run pytest -q
+uv run python scripts/smoke_train.py --output artifacts/current/smoke-result.json
+```
+
+전체 suite는 기능 테스트 50개, CPU smoke 테스트 1개, 증빙 계약 테스트 3개로 구성됩니다.
+
+## Historical result — commit `4fe533e`
+
+아래 수치는 2026-06-03에 CUDA 환경에서 실행해 원본 commit `4fe533e`에 저장한 과거 batch-size 비교 결과입니다. 현재 CPU smoke 결과가 아닙니다.
+
+- seed 42, 10 epochs, corpus 1.5M characters
+- vocabulary 3,000, context 128, embedding 128
+- 2 Transformer layers, 4 heads, dropout 0.1
+- 현재 코드로 계산한 모델 parameter 수: 1,180,416
+
+| Batch | Best validation loss | Test perplexity | Test Top-1 / Top-3 / Top-5 | Total time |
+| ---: | ---: | ---: | ---: | ---: |
+| 4 | 4.0773 | 59.3438 | 0.2272 / 0.3745 / 0.4476 | 714.12 s |
+| 8 | 4.1646 | 64.9118 | 0.2178 / 0.3618 / 0.4344 | 451.79 s |
+| 16 | 4.2240 | 68.9680 | 0.2131 / 0.3555 / 0.4266 | 312.58 s |
+
+![Historical validation-loss comparison](artifacts/pretraining/loss_comparison_val.png)
+
+원본 config·epoch metrics·표·dashboard는 [`artifacts/pretraining/`](artifacts/pretraining/)에 선별 보존했습니다. 해석과 출처 경계는 [docs/results.md](docs/results.md)를 함께 확인해 주세요.
+
+## Current CPU smoke result — 2026-07-18
+
+현재 환경에서 고정 synthetic batch를 사용해 작은 GPT를 CPU로 5 step 학습한 결과입니다.
+
+| Device | Seed | Steps | Initial loss | Final loss | Torch |
+| --- | ---: | ---: | ---: | ---: | --- |
+| CPU | 42 | 5 | 4.308793 | 2.670516 | 2.13.0+cpu |
+
+이 smoke run은 설치, forward/backward, optimizer update가 함께 동작하고 같은 batch에서 loss가 감소하는지만 확인합니다. 과거 10-epoch GPU 실험의 성능을 재현했다는 뜻은 아닙니다. 원본 JSON은 [`artifacts/current/smoke-result.json`](artifacts/current/smoke-result.json)입니다.
+
+## 프로젝트 구조
+
+```text
+.
+├── foundations/mnist_numpy/   # NumPy neural-network foundation
+├── gpt/                       # BPE, GPT, training and fine-tuning code
+├── scripts/smoke_train.py     # deterministic CPU smoke run
+├── artifacts/current/         # current-environment result
+├── artifacts/pretraining/     # selected files from commit 4fe533e
+├── docs/architecture.md       # model and data flow
+├── docs/results.md            # historical/current result boundary
+├── docs/contribution-map.md   # personal commit evidence
+└── ATTRIBUTION.md             # source and reuse status
+```
+
+## 기여와 출처
+
+- 팀 구현 전체의 출처와 재사용 조건: [ATTRIBUTION.md](ATTRIBUTION.md)
+- 이시원(`NearthYou`)의 원본 commit별 기여: [docs/contribution-map.md](docs/contribution-map.md)
+- GPT 원본 개선 PR: [`Soldbone/gpt-lab#40`](https://github.com/Soldbone/gpt-lab/pull/40)
+- fork의 개인 증빙 PR: [`NearthYou/gpt-lab#1`](https://github.com/NearthYou/gpt-lab/pull/1)
+
+## 한계
+
+- 과거 pretraining 결과는 commit `4fe533e`에서 추출한 historical artifact이며 이 저장소에서 다시 장시간 학습한 결과가 아닙니다.
+- 현재 재현은 synthetic batch를 사용하는 CPU smoke check입니다. 모델 품질 평가나 corpus-level benchmark가 아닙니다.
+- 보존된 sample-generation 표에는 당시 데이터 인코딩 문제로 깨진 문자가 포함되어 있어 품질 근거로 사용하지 않습니다.
+- 감성 분류 fine-tuning 코드와 테스트는 있지만, 검증 가능한 historical accuracy artifact가 없어 정확도 수치를 주장하지 않습니다.
+- 두 원본 팀 저장소와 이 재구성 저장소에는 팀이 승인한 별도 오픈소스 LICENSE를 추가하지 않았습니다.
