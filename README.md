@@ -4,7 +4,7 @@ A curated, testable learning path from NumPy neural-network foundations to byte-
 
 ## 한국어 요약
 
-NumPy로 만든 MNIST 신경망에서 출발해 BPE, embedding, causal multi-head attention, GPT 사전학습·생성, 감성 분류 미세조정 유틸리티까지 이어지는 학습 결과를 한 저장소에서 검증할 수 있도록 재구성했습니다. 핵심은 결과를 많이 나열하는 것이 아니라, 구현 범위·개인 기여·과거 실험·현재 재현을 서로 섞지 않는 것입니다.
+NumPy로 만든 MNIST 신경망에서 출발해 BPE, embedding, causal multi-head attention, GPT 사전학습·생성, 감성 분류 미세조정 유틸리티까지 이어지는 학습 결과를 한 저장소에서 검증할 수 있도록 재구성했습니다.
 
 ## 왜 별도 저장소인가
 
