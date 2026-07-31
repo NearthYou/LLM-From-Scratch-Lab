@@ -1,6 +1,6 @@
 # LLM From Scratch Lab
 
-NumPy로 만든 MNIST 신경망에서 출발해 BPE, embedding, causal multi-head attention, GPT 사전학습·생성, 감성 분류 미세조정 유틸리티까지 이어지는 학습 결과를 한 저장소에서 검증할 수 있도록 재구성했습니다.
+NumPy로 만든 MNIST 신경망에서 출발해 BPE, embedding, causal multi-head attention, GPT 사전학습과 생성, 감성 분류 미세조정 유틸리티까지 이어지는 학습 결과를 한 저장소에서 검증할 수 있도록 재구성했습니다.
 
 원본은 두 개의 팀 과제 저장소에 나뉘어 있습니다.
 
@@ -8,6 +8,16 @@ NumPy로 만든 MNIST 신경망에서 출발해 BPE, embedding, causal multi-hea
 - NumPy/MNIST 원본: [`devhyun05/group4-mnist-lab`](https://github.com/devhyun05/group4-mnist-lab)
 
 재배포 동의와 라이선스 경계는 [ATTRIBUTION.md](ATTRIBUTION.md)에 기록했습니다
+
+## 프로젝트 요약
+
+| 항목 | 내용 |
+| --- | --- |
+| 개발 형태 | 4인 페어 프로그래밍 팀 과제, 이후 개인 검증 저장소로 재구성 |
+| 확인하려던 것 | LLM API를 사용하는 수준을 넘어 tokenization부터 attention, 학습과 생성까지 데이터가 어떻게 흐르는지 직접 확인 |
+| 구현 범위 | byte-level BPE, embedding, causal multi-head attention, Transformer block, 학습과 생성 |
+| 실험 | 같은 seed, 10 epochs와 150만 character corpus에서 batch size만 4, 8, 16으로 변경 |
+| 검증 원칙 | 당시 GPU 실험과 현재 CPU smoke run을 분리하고 개인, 페어, 팀 기여를 commit 근거로 구분 |
 
 ## 학습 흐름
 
@@ -33,13 +43,13 @@ text
 
 ## 구현 범위
 
-| 영역 | 구현·검증 범위 | 위치 |
+| 영역 | 구현과 검증 범위 | 위치 |
 | --- | --- | --- |
 | NumPy 기초 | Affine, ReLU, Softmax, BatchNorm, Dropout, cross entropy, SGD, Adam, 학습 루프 | `foundations/mnist_numpy/` |
-| Tokenization | byte-level BPE 학습, encode/decode, vocabulary·merge rule | `gpt/src/bpe.py` |
+| Tokenization | byte-level BPE 학습, encode/decode, vocabulary와 merge rule | `gpt/src/bpe.py` |
 | GPT | token/position embedding, causal multi-head attention, LayerNorm, FFN, residual blocks, LM head | `gpt/src/` |
 | Training | loss 계산, checkpoint, 생성, pretraining loop | `gpt/src/train.py` |
-| Fine-tuning | 감성 데이터셋·분류 헤드·학습 및 평가 유틸리티 | `gpt/src/finetune.py` |
+| Fine-tuning | 감성 데이터셋, 분류 헤드, 학습 및 평가 유틸리티 | `gpt/src/finetune.py` |
 | 증빙 | 현재 CPU smoke JSON, 과거 GPU run의 선택 아티팩트, 기여 commit map | `artifacts/`, `docs/` |
 
 ## 빠른 검증
@@ -54,7 +64,7 @@ uv run python scripts/smoke_train.py --output artifacts/current/smoke-result.jso
 
 전체 suite는 기능 테스트 50개, CPU smoke 테스트 1개, 증빙 계약 테스트 3개로 구성됩니다.
 
-## Historical result — commit `4fe533e`
+## Historical result - commit `4fe533e`
 
 아래 수치는 2026-06-03에 CUDA 환경에서 실행해 원본 commit `4fe533e`에 저장한 과거 batch-size 비교 결과입니다. 현재 CPU smoke 결과가 아닙니다.
 
@@ -69,11 +79,13 @@ uv run python scripts/smoke_train.py --output artifacts/current/smoke-result.jso
 | 8 | 4.1646 | 64.9118 | 0.2178 / 0.3618 / 0.4344 | 451.79 s |
 | 16 | 4.2240 | 68.9680 | 0.2131 / 0.3555 / 0.4266 | 312.58 s |
 
+이 한 번의 실험에서는 batch 16이 batch 4보다 전체 학습 시간이 약 56% 짧았지만, best validation loss와 test perplexity는 batch 4가 더 좋았습니다. 큰 batch가 항상 더 좋은 결과를 낸다고 일반화하지 않고, 같은 데이터와 설정에서 확인한 학습 시간과 품질의 trade-off로만 해석합니다.
+
 ![Historical validation-loss comparison](artifacts/pretraining/loss_comparison_val.png)
 
 원본 config, epoch metrics, 표, dashboard는 [`artifacts/pretraining/`](artifacts/pretraining/)에 보존했습니다. 해석과 출처 경계는 [docs/results.md](docs/results.md)를 함께 확인해 주세요.
 
-## Current CPU smoke result — 2026-07-18
+## Current CPU smoke result - 2026-07-18
 
 현재 환경에서 고정 synthetic batch를 사용해 작은 GPT를 CPU로 5 step 학습한 결과입니다.
 
