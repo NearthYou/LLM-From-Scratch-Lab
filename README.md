@@ -25,17 +25,29 @@ LLM API를 사용하는 것과 모델 안에서 데이터가 흐르는 과정을
 
 ## 구현한 흐름
 
-```text
-한국어 text
-  -> byte-level BPE 학습과 encode
-  -> token ID와 position ID
-  -> token embedding과 position embedding
-  -> causal multi-head attention
-  -> residual Transformer blocks
-  -> language-model head
-  -> next-token cross entropy
-  -> checkpoint
-  -> 문장 생성 또는 감성 분류 fine-tuning utility
+```mermaid
+flowchart LR
+    A["한국어 텍스트"] --> B["Byte-level BPE<br/>학습과 인코딩"]
+    B --> C["Token ID와<br/>Position ID"]
+    C --> D["Token Embedding과<br/>Position Embedding"]
+
+    subgraph T["Transformer Block × N"]
+        E["LayerNorm"] --> F["Causal Multi-Head Attention"]
+        F --> G["Residual 연결"]
+        G --> H["LayerNorm"]
+        H --> I["Feed Forward Network"]
+        I --> J["Residual 연결"]
+    end
+
+    D --> E
+    J --> K["Language Model Head"]
+    K --> L["다음 토큰 확률"]
+    L --> M["Cross Entropy Loss"]
+    M --> N["역전파와 가중치 갱신"]
+    N --> O["Checkpoint 저장"]
+    O --> P["문장 생성"]
+    O --> Q["감성 분류 Head"]
+    Q --> R["Fine-tuning"]
 ```
 
 | 단계 | 구현 내용 | 위치 |
@@ -79,6 +91,8 @@ LLM API를 사용하는 것과 모델 안에서 데이터가 흐르는 과정을
 
 이 비교에서는 6층의 validation loss가 가장 낮았습니다. 다만 층이 많을수록 항상 좋은 모델이 된다고 일반화하지 않고, 이번 모델과 데이터 범위에서 확인한 결과로만 해석했습니다.
 
+![Transformer 층 수에 따른 validation loss](docs/images/layer-comparison.svg)
+
 ### 학습률
 
 작은 모델에서는 학습률을 조금 높여도 안정적으로 수렴할 수 있다고 예상했습니다.
@@ -90,6 +104,8 @@ LLM API를 사용하는 것과 모델 안에서 데이터가 흐르는 과정을
 | 5e-4 | 4.0297 |
 
 시도한 범위에서는 5e-4가 가장 낮았습니다. 더 큰 학습률에서도 같은 경향이 이어진다는 뜻은 아닙니다.
+
+![학습률에 따른 validation loss](docs/images/learning-rate-comparison.png)
 
 ### 배치 크기
 
@@ -117,6 +133,8 @@ dropout을 늘리면 과적합을 줄일 수 있지만 작은 모델에서는 �
 
 이 비교에서는 dropout을 높일수록 train과 validation loss가 함께 올라 0.1을 유지했습니다.
 
+![dropout에 따른 best validation loss](docs/images/dropout-comparison.svg)
+
 ## 최종 설정과 결과
 
 각 비교에서 확인한 방향을 바탕으로 다음 설정을 선택했습니다.
@@ -134,6 +152,8 @@ dropout을 늘리면 과적합을 줄일 수 있지만 작은 모델에서는 �
 | epochs | 10 |
 
 최종 실행은 train loss 3.653, validation loss 3.769를 기록했습니다. 발표의 초기 실행과 비교하면 validation loss가 5.565에서 3.769로 낮아졌습니다.
+
+![최종 설정의 train과 validation loss](docs/images/final-training-loss.png)
 
 층 수, 학습률과 배치 크기를 함께 바꾼 결과이므로 이 차이를 특정 설정 하나의 효과로 해석하지 않습니다. 발표 자료의 초기와 최종 결과, 저장소에 보존한 batch-size 실험도 서로 다른 실행이므로 하나의 연속된 loss curve처럼 합치지 않았습니다.
 

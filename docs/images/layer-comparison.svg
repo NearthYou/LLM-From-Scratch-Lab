@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1000" height="460" viewBox="0 0 1000 460" role="img" aria-labelledby="title desc">
+  <title id="title">Transformer 층 수에 따른 마지막 validation loss</title>
+  <desc id="desc">2층 4.160, 4층 4.067, 6층 3.995를 비교한 선 그래프</desc>
+  <rect width="1000" height="460" fill="#ffffff"/>
+  <text x="500" y="48" text-anchor="middle" font-family="Arial, Noto Sans KR, sans-serif" font-size="28" font-weight="700" fill="#111827">Validation Loss by Transformer Layers</text>
+  <g stroke="#e5e7eb" stroke-width="1">
+    <line x1="120" y1="110" x2="920" y2="110"/>
+    <line x1="120" y1="210" x2="920" y2="210"/>
+    <line x1="120" y1="310" x2="920" y2="310"/>
+  </g>
+  <g fill="#4b5563" font-family="Arial, Noto Sans KR, sans-serif" font-size="18">
+    <text x="102" y="116" text-anchor="end">4.2</text>
+    <text x="102" y="216" text-anchor="end">4.1</text>
+    <text x="102" y="316" text-anchor="end">4.0</text>
+    <text x="230" y="400" text-anchor="middle">2층</text>
+    <text x="520" y="400" text-anchor="middle">4층</text>
+    <text x="810" y="400" text-anchor="middle">6층</text>
+    <text x="34" y="225" text-anchor="middle" transform="rotate(-90 34 225)">마지막 validation loss</text>
+  </g>
+  <polyline points="230,150 520,243 810,315" fill="none" stroke="#2563eb" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+  <g fill="#2563eb">
+    <circle cx="230" cy="150" r="10"/>
+    <circle cx="520" cy="243" r="10"/>
+    <circle cx="810" cy="315" r="10"/>
+  </g>
+  <g fill="#111827" font-family="Arial, Noto Sans KR, sans-serif" font-size="20" font-weight="700" text-anchor="middle">
+    <text x="230" y="132">4.160</text>
+    <text x="520" y="225">4.067</text>
+    <text x="810" y="297">3.995</text>
+  </g>
+</svg>
