@@ -4,12 +4,18 @@
 
 ## 전체 데이터 흐름
 
-```text
-text -> byte-level BPE -> token ids
-token ids + positions -> embedding
-embedding -> causal multi-head attention -> residual/FFN blocks
-hidden states -> LM head -> next-token loss
-checkpoint -> generation or sentiment classifier fine-tuning
+```mermaid
+flowchart LR
+    Text[UTF-8 text] --> BPE[byte-level BPE]
+    BPE --> IDs[token IDs]
+    IDs --> Dataset[next-token input과 target]
+    Dataset --> Embedding[token과 position embedding]
+    Embedding --> Blocks[causal attention과 FFN blocks]
+    Blocks --> Head[language model head]
+    Head --> Loss[next-token loss]
+    Loss --> Checkpoint[checkpoint]
+    Checkpoint --> Generation[문장 생성]
+    Checkpoint --> Classifier[sentiment classifier]
 ```
 
 ## 1. NumPy와 MNIST 기초
@@ -72,6 +78,31 @@ x -> LayerNorm -> causal MHA -> Dropout -> +x
 ```
 
 여러 block의 hidden state는 final LayerNorm과 vocabulary projection을 지나 token별 logits가 됩니다. target이 주어지면 모든 position을 flatten해 next-token cross entropy를 계산합니다.
+
+```mermaid
+classDiagram
+    class BPETokenizer
+    class GPTDataset
+    class InputEmbedding
+    class GPTModel
+    class TransformerBlock
+    class MultiHeadAttention
+    class FeedForward
+    class LayerNorm
+    class GPTForSequenceClassification
+
+    BPETokenizer --> GPTDataset : token ID 전달
+    GPTDataset --> GPTModel : input과 target batch
+    GPTModel *-- InputEmbedding
+    GPTModel *-- TransformerBlock
+    GPTModel *-- LayerNorm : final norm
+    TransformerBlock *-- MultiHeadAttention
+    TransformerBlock *-- FeedForward
+    TransformerBlock *-- LayerNorm : pre-norm 두 개
+    GPTForSequenceClassification o-- GPTModel : backbone 재사용
+```
+
+`GPTModel`은 embedding, 반복되는 block, final normalization과 LM head를 소유합니다. `GPTForSequenceClassification`은 별도 backbone을 복사하지 않고 전달받은 `GPTModel`의 embedding과 block을 재사용합니다.
 
 ## 5. 학습, checkpoint, 생성과 fine-tuning
 
