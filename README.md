@@ -88,6 +88,8 @@ uv run python scripts/smoke_train.py --output artifacts/current/smoke-result.jso
 
 CPU smoke는 하나의 synthetic batch를 5 step 반복합니다. loss 감소는 optimizer 연결을 확인할 뿐 모델 품질이나 일반화 성능을 증명하지 않습니다.
 
+같은 날 smoke를 다시 실행한 결과 날짜를 제외한 모든 field와 loss 값이 보존 JSON과 일치했습니다. script가 실행일을 기록하므로 기존 증적 파일은 바꾸지 않았습니다.
+
 ## 프로젝트 구조
 
 ```text

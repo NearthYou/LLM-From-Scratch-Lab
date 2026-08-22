@@ -66,7 +66,7 @@
 
 ![dropout에 따른 best validation loss](images/dropout-comparison.svg)
 
-### 배치 크기
+### Historical result: 배치 크기
 
 batch 비교는 다른 세 비교와 달리 원본 산출물을 보존했습니다. 근거 원본은 [`Soldbone/gpt-lab` commit `4fe533e`](https://github.com/Soldbone/gpt-lab/commit/4fe533e)와 해당 commit의 `outputs/batch_size_experiment_20260603_170551`입니다.
 
@@ -122,7 +122,7 @@ MNIST 원본의 [`REPORT.md`](https://github.com/devhyun05/group4-mnist-lab/blob
 
 이 값은 원본 보고서의 historical result입니다. 현재 독립 저장소 검증은 전체 MNIST 재학습 대신 layer, optimizer와 network 단위 테스트를 실행합니다.
 
-## 현재 CPU 재현
+## Current reproduction: 현재 CPU 재현
 
 현재 환경에서는 `scripts/smoke_train.py`로 작은 GPT의 forward, next-token loss, backward와 AdamW update가 CPU에서 연결되는지 확인합니다.
 
@@ -144,6 +144,8 @@ MNIST 원본의 [`REPORT.md`](https://github.com/devhyun05/group4-mnist-lab/blob
 같은 synthetic batch를 반복 최적화한 결과입니다. 설치와 학습 경로의 연결은 확인하지만 언어 생성 품질이나 일반화 성능을 측정하지 않습니다.
 
 2026-08-22 baseline에서 `uv run pytest -q`는 54개 테스트가 통과했습니다. Matplotlib의 non-interactive canvas 경고 2개가 있었지만 테스트 실패는 없었습니다.
+
+같은 날 CPU smoke를 다시 실행하자 날짜를 제외한 모든 field와 loss 값이 보존 JSON과 일치했습니다. script는 실행일을 `run_date`에 쓰므로 증적 파일은 기존 2026-07-18 실행본을 그대로 유지합니다.
 
 ## 생성과 fine-tuning 범위
 
