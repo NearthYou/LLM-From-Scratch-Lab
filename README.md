@@ -45,7 +45,7 @@ Python은 단순 실행 script가 아니라 구현의 중심입니다. NumPy arr
 
 ## 팀 결과와 개인 기여
 
-원본 과제는 4명이 페어 프로그래밍으로 진행했습니다. BPE, embedding, attention과 GPT backbone은 팀 공동 구현이며 한 사람의 단독 결과로 표시하지 않습니다.
+원본 과제는 4명이 페어 프로그래밍으로 진행했습니다. BPE, embedding, attention과 GPT backbone은 팀 공동 구현입니다.
 
 - GPT 원본: [`Soldbone/gpt-lab`](https://github.com/Soldbone/gpt-lab)
 - NumPy와 MNIST 원본: [`devhyun05/group4-mnist-lab`](https://github.com/devhyun05/group4-mnist-lab)
