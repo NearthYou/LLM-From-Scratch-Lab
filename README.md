@@ -62,15 +62,19 @@ NumPy array만으로 layer cache와 gradient, SGD와 Adam을 계산했습니다.
 
 개별 commit과 공동 구현 경계는 [기여 기록](docs/contribution-map.md)에서 확인할 수 있습니다.
 
-## GPT 파라미터 실험과 시각자료
+## 문제 해결 과정
 
-### GPT 설정 비교의 판단 순서
+각 사례는 문제와 원인, 선택과 구현, 검증과 한계 순서로 정리했습니다.
+
+### GPT 파라미터 실험과 시각자료
+
+#### 판단 기준
 
 기준 실행은 2 layers, learning rate 3e-4, batch size 8, dropout 0.1이었습니다. 이 기준에서 표현력, 최적화 속도, 한 번에 처리하는 표본 수, 규제 강도를 각각 바꾸어 볼 필요가 있었습니다.
 
 층 수는 표현력과 계산량의 균형을, learning rate는 주어진 epoch 안의 최적화 속도를 확인하려고 비교했습니다. batch size는 loss와 학습 시간의 trade-off를, dropout은 작은 모델에서의 규제 강도를 보기 위한 항목이었습니다.
 
-layer, learning rate, dropout 비교는 발표 표와 그래프만 보존되어 있습니다. batch 4, 8, 16 비교에는 `4fe533e`의 설정 JSON, epoch metric, summary와 dashboard가 남아 있어 원본 수치를 다시 읽을 수 있습니다.
+layer, learning rate, dropout 비교는 발표 표와 그래프만 보존되어 있습니다. batch 4, 8, 16 비교에는 설정 JSON, epoch metric, summary와 dashboard가 남아 있어 원본 수치를 다시 읽을 수 있습니다.
 
 6 layers, 5e-4, batch 4, dropout 0.1은 최종 설정으로 남아 있습니다. 발표 기록과 별도 조건의 batch artifact는 이 설정을 고른 실제 순서를 증명하지 않으므로, 함께 묶어 선택 근거로 해석하지 않습니다.
 
@@ -83,19 +87,19 @@ layer, learning rate, dropout 비교는 발표 표와 그래프만 보존되어 
 | Batch size | 4, 8, 16 | batch 4가 가장 낮은 loss, batch 16이 가장 빠름 | raw metric과 dashboard |
 | Dropout | 0.1, 0.2, 0.3 | 0.1 best validation loss 5.699 | 발표 표와 그래프 |
 
-### Transformer 층 수
+#### Transformer 층 수
 
 층을 늘리면 더 복잡한 표현을 학습할 수 있지만 계산량과 memory도 늘어납니다. 이 모델과 corpus에서는 2층 4.160, 4층 4.067, 6층 3.995 순으로 마지막 validation loss가 낮아졌습니다.
 
 ![Transformer 층 수에 따른 validation loss](docs/images/layer-comparison.svg)
 
-### Learning rate
+#### Learning rate
 
 1e-4, 3e-4, 5e-4를 10 epoch 동안 비교했습니다. 시도한 범위에서는 5e-4가 4.0297로 가장 낮았지만, 더 큰 learning rate에서도 같은 경향이 이어진다는 뜻은 아닙니다.
 
 ![learning rate에 따른 validation loss](docs/images/learning-rate-comparison.png)
 
-### Batch size
+#### Batch size
 
 batch 4, 8, 16은 seed 42, 같은 corpus와 model 설정으로 실행했습니다. batch 4는 best validation loss 4.077299, batch 16은 전체 학습 시간 312.575초를 기록해 품질과 시간의 trade-off가 드러났습니다.
 
@@ -105,13 +109,13 @@ batch 4, 8, 16은 seed 42, 같은 corpus와 model 설정으로 실행했습니�
 
 이 비교에는 batch별 JSON, summary와 epoch metric이 남아 있습니다. 단일 seed와 단일 GPU 실행이므로 일반적인 최적 batch size로 해석하지 않습니다.
 
-### Dropout
+#### Dropout
 
 dropout을 높이면 과적합을 줄일 수 있지만 작은 모델에서는 필요한 표현까지 막을 수 있다고 예상했습니다. 이 기록에서는 0.1, 0.2, 0.3 순으로 best validation loss가 5.699, 5.793, 5.900이었습니다.
 
 ![dropout에 따른 best validation loss](docs/images/dropout-comparison.svg)
 
-### 최종 설정
+#### 최종 설정
 
 | 항목 | 값 |
 | --- | ---: |
@@ -142,7 +146,7 @@ uv run python scripts/smoke_train.py --output artifacts/current/smoke-result.jso
 
 CPU smoke는 하나의 synthetic batch를 5 step 반복합니다. loss 감소는 optimizer 연결을 확인할 뿐 모델 품질이나 일반화 성능을 증명하지 않습니다.
 
-`scripts/smoke_train.py`는 seed 42와 작은 model 설정을 고정하고 initial loss, final loss와 step별 loss를 JSON으로 저장합니다. `tests/test_evidence_contract.py`는 `docs/results.md`에 `Historical result`, `Current reproduction`, `4fe533e`가 있는지만 검사합니다.
+`scripts/smoke_train.py`는 seed 42와 작은 model 설정을 고정하고 initial loss, final loss와 step별 loss를 JSON으로 저장합니다. `tests/test_evidence_contract.py`는 `docs/results.md`에서 historical result, current reproduction과 실험 artifact 구분이 유지되는지만 검사합니다.
 
 이 검사는 문서의 historical과 current 표기를 지키는 범위입니다. GPU와 CPU의 장치, 데이터, 모델 차이는 이 문단과 [실험 결과](docs/results.md)에서 별도로 읽어야 합니다.
 
