@@ -112,7 +112,7 @@ classDiagram
 | `gpt/src/finetune.py` | sentiment dataset, classifier head, fine-tuning/evaluation utility |
 | `scripts/smoke_train.py` | 고정 synthetic batch에서 CPU forward/backward/update 연결 확인 |
 
-Generation은 context window를 잘라 model logits을 얻은 뒤 greedy 또는 configured sampling으로 다음 token을 붙입니다. Fine-tuning utility는 pretraining checkpoint를 classifier에 연결할 수 있지만, 이 저장소에는 검증 가능한 sentiment accuracy artifact가 없어 성능 수치를 별도로 주장하지 않습니다.
+Generation은 context window를 잘라 model logits을 얻은 뒤 greedy 또는 configured sampling으로 다음 token을 붙입니다. Fine-tuning utility는 pretraining checkpoint를 sentiment classifier에 연결합니다.
 
 ## 검증 경계
 

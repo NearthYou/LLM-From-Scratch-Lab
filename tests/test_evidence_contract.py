@@ -56,17 +56,17 @@ def test_required_evidence_and_completed_sources():
     assert missing == []
 
 
-def test_attribution_names_sources_and_license_boundary():
+def test_attribution_names_sources_and_contribution_map():
     attribution = (ROOT / "ATTRIBUTION.md").read_text(encoding="utf-8")
 
     assert "https://github.com/Soldbone/gpt-lab" in attribution
     assert "https://github.com/devhyun05/group4-mnist-lab" in attribution
-    assert "별도 LICENSE가 없으므로" in attribution
+    assert "docs/contribution-map.md" in attribution
 
 
-def test_results_separate_historical_and_current_evidence():
+def test_results_link_batch_source_and_cpu_smoke():
     results = (ROOT / "docs" / "results.md").read_text(encoding="utf-8")
 
-    assert "Historical result" in results
-    assert "Current reproduction" in results
-    assert "4fe533e" in results
+    assert "batch experiment source" in results
+    assert "## CPU smoke" in results
+    assert "54개 test" in results
