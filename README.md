@@ -37,6 +37,10 @@ flowchart LR
 | 학습과 생성 | loss, optimizer step, checkpoint, temperature와 top-k generation | `gpt/src/train.py` |
 | Fine-tuning | sentiment dataset, classifier head, train과 evaluate 도구 | `gpt/src/finetune.py` |
 
+Python은 단순 실행 script가 아니라 구현의 중심입니다. NumPy array만으로 layer cache와 gradient, SGD와 Adam을 계산하고, PyTorch에서는 `nn.Module` 경계와 tensor shape를 직접 설계해 GPT 학습과 생성을 연결했습니다.
+
+학습 code 밖에서는 pytest로 수치와 상태 전이를 검사하고, smoke run과 batch 실험을 JSON, CSV, Markdown과 그래프로 남깁니다. 따라서 model 구현, 실험 자동화와 결과 검증을 같은 Python 흐름에서 추적할 수 있습니다.
+
 세부 tensor shape와 module boundary는 [구현 구조](docs/architecture.md)에 정리했습니다.
 
 ## 팀 결과와 개인 기여
@@ -58,21 +62,61 @@ flowchart LR
 
 개별 commit과 공동 구현 경계는 [기여 기록](docs/contribution-map.md)에서 확인할 수 있습니다.
 
-## 대표 실험 결과
+## 파라미터 실험과 시각자료
 
-| 결과 | 값 | 근거 범위 |
-| --- | --- | --- |
-| 발표 기준 validation loss | 5.565 | 독립 저장소 README에 보존된 발표 기록 |
-| 최종 validation loss | 3.769 | 여러 설정을 함께 바꾼 발표 기록 |
-| batch 4 validation loss | 4.077299 | commit `4fe533e`의 원본 산출물 |
-| batch 16 training time | 312.575초 | commit `4fe533e`의 원본 산출물 |
-| 현재 CPU smoke loss | 4.308793에서 2.670516 | 같은 synthetic batch의 5-step 연결 검사 |
+모델을 완성한 뒤 Transformer 층 수, learning rate, batch size와 dropout을 비교했습니다. 발표 자료의 가설과 결과를 숨기지 않되, 원본 metric 파일이 남은 batch 실험과 그래프만 남은 실험은 근거 수준을 구분합니다.
+
+| 파라미터 | 비교값 | 관찰한 결과 | 근거 |
+| --- | --- | --- | --- |
+| Transformer layers | 2, 4, 6 | 6층 validation loss 3.995 | 발표 표와 그래프 |
+| Learning rate | 1e-4, 3e-4, 5e-4 | 5e-4 validation loss 4.0297 | 발표 표와 그래프 |
+| Batch size | 4, 8, 16 | batch 4가 가장 낮은 loss, batch 16이 가장 빠름 | raw metric과 dashboard |
+| Dropout | 0.1, 0.2, 0.3 | 0.1 best validation loss 5.699 | 발표 표와 그래프 |
+
+### Transformer 층 수
+
+층을 늘리면 더 복잡한 표현을 학습할 수 있지만 계산량과 memory도 늘어납니다. 이 모델과 corpus에서는 2층 4.160, 4층 4.067, 6층 3.995 순으로 마지막 validation loss가 낮아졌습니다.
+
+![Transformer 층 수에 따른 validation loss](docs/images/layer-comparison.svg)
+
+### Learning rate
+
+1e-4, 3e-4, 5e-4를 10 epoch 동안 비교했습니다. 시도한 범위에서는 5e-4가 4.0297로 가장 낮았지만, 더 큰 learning rate에서도 같은 경향이 이어진다는 뜻은 아닙니다.
+
+![learning rate에 따른 validation loss](docs/images/learning-rate-comparison.png)
+
+### Batch size
+
+batch 4, 8, 16은 seed 42, 같은 corpus와 model 설정으로 실행했습니다. batch 4는 best validation loss 4.077299, batch 16은 전체 학습 시간 312.575초를 기록해 품질과 시간의 trade-off가 드러났습니다.
+
+![batch size별 loss, perplexity, accuracy와 학습 시간 dashboard](artifacts/pretraining/batch_size_experiment_dashboard.png)
+
+![batch size별 validation loss](artifacts/pretraining/loss_comparison_val.png)
+
+이 비교에는 batch별 JSON, summary와 epoch metric이 남아 있습니다. 단일 seed와 단일 GPU 실행이므로 일반적인 최적 batch size로 해석하지 않습니다.
+
+### Dropout
+
+dropout을 높이면 과적합을 줄일 수 있지만 작은 모델에서는 필요한 표현까지 막을 수 있다고 예상했습니다. 이 기록에서는 0.1, 0.2, 0.3 순으로 best validation loss가 5.699, 5.793, 5.900이었습니다.
+
+![dropout에 따른 best validation loss](docs/images/dropout-comparison.svg)
+
+### 최종 설정
+
+| 항목 | 값 |
+| --- | ---: |
+| Transformer layers | 6 |
+| attention heads | 4 |
+| learning rate | 5e-4 |
+| batch size | 4 |
+| dropout | 0.1 |
+| epochs | 10 |
+
+최종 실행은 train loss 3.653, validation loss 3.769를 기록했습니다. 초기 실행과 여러 설정이 함께 달라졌으므로 개선 폭을 한 파라미터의 효과로 돌리지 않습니다.
 
 ![최종 설정의 train과 validation loss](docs/images/final-training-loss.png)
 
-초기와 최종 결과는 layer, learning rate와 batch size가 함께 다릅니다. 특정 변수 하나의 효과로 해석할 수 없습니다. batch 비교만 원본 설정과 epoch별 지표를 보존했으며 나머지 비교는 발표 표와 이미지가 남아 있습니다.
-
-표, provenance와 해석 한계는 [실험 결과](docs/results.md)에 분리했습니다.
+전체 수치, artifact link와 해석 한계는 [실험 결과](docs/results.md)에 있습니다.
 
 ## 현재 재현 방법
 
@@ -87,6 +131,8 @@ uv run python scripts/smoke_train.py --output artifacts/current/smoke-result.jso
 2026-08-22 baseline에서 54개 테스트가 통과했습니다. Matplotlib의 non-interactive canvas 경고 2개가 있었지만 실패는 없었습니다.
 
 CPU smoke는 하나의 synthetic batch를 5 step 반복합니다. loss 감소는 optimizer 연결을 확인할 뿐 모델 품질이나 일반화 성능을 증명하지 않습니다.
+
+`scripts/smoke_train.py`는 seed와 model 설정을 고정하고 step별 loss를 수집해 JSON으로 저장합니다. `tests/test_evidence_contract.py`는 historical GPU 결과와 현재 CPU 결과가 문서에서 섞이지 않는지도 검사합니다.
 
 같은 날 smoke를 다시 실행한 결과 날짜를 제외한 모든 field와 loss 값이 보존 JSON과 일치했습니다. script가 실행일을 기록하므로 기존 증적 파일은 바꾸지 않았습니다.
 
