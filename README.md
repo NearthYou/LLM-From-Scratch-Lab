@@ -37,9 +37,9 @@ flowchart LR
 | 학습과 생성 | loss, optimizer step, checkpoint, temperature와 top-k generation | `gpt/src/train.py` |
 | Fine-tuning | sentiment dataset, classifier head, train과 evaluate 도구 | `gpt/src/finetune.py` |
 
-Python은 단순 실행 script가 아니라 구현의 중심입니다. NumPy array만으로 layer cache와 gradient, SGD와 Adam을 계산하고, PyTorch에서는 `nn.Module` 경계와 tensor shape를 직접 설계해 GPT 학습과 생성을 연결했습니다.
+NumPy array만으로 layer cache와 gradient, SGD와 Adam을 계산했습니다. 이어서 PyTorch `nn.Module` 경계와 tensor shape를 직접 설계해 GPT 학습과 생성을 연결했습니다.
 
-학습 code 밖에서는 pytest로 수치와 상태 전이를 검사하고, smoke run과 batch 실험을 JSON, CSV, Markdown과 그래프로 남깁니다. 따라서 model 구현, 실험 자동화와 결과 검증을 같은 Python 흐름에서 추적할 수 있습니다.
+학습 code 밖에서는 pytest로 수치와 상태 전이를 검사하고, smoke run과 batch 실험을 JSON, CSV, Markdown과 그래프로 남깁니다. NumPy gradient, PyTorch module, pytest와 산출물을 함께 보면 구현과 검증의 연결을 추적할 수 있습니다.
 
 세부 tensor shape와 module boundary는 [구현 구조](docs/architecture.md)에 정리했습니다.
 
@@ -62,9 +62,19 @@ Python은 단순 실행 script가 아니라 구현의 중심입니다. NumPy arr
 
 개별 commit과 공동 구현 경계는 [기여 기록](docs/contribution-map.md)에서 확인할 수 있습니다.
 
-## 파라미터 실험과 시각자료
+## GPT 파라미터 실험과 시각자료
 
-모델을 완성한 뒤 Transformer 층 수, learning rate, batch size와 dropout을 비교했습니다. 발표 자료의 가설과 결과를 숨기지 않되, 원본 metric 파일이 남은 batch 실험과 그래프만 남은 실험은 근거 수준을 구분합니다.
+### GPT 설정 비교의 판단 순서
+
+기준 실행은 2 layers, learning rate 3e-4, batch size 8, dropout 0.1이었습니다. 이 기준에서 표현력, 최적화 속도, 한 번에 처리하는 표본 수, 규제 강도를 각각 바꾸어 볼 필요가 있었습니다.
+
+층 수는 표현력과 계산량의 균형을, learning rate는 주어진 epoch 안의 최적화 속도를 확인하려고 비교했습니다. batch size는 loss와 학습 시간의 trade-off를, dropout은 작은 모델에서의 규제 강도를 보기 위한 항목이었습니다.
+
+layer, learning rate, dropout 비교는 발표 표와 그래프만 보존되어 있습니다. batch 4, 8, 16 비교에는 `4fe533e`의 설정 JSON, epoch metric, summary와 dashboard가 남아 있어 원본 수치를 다시 읽을 수 있습니다.
+
+시도한 범위의 최저 validation loss와 batch 4의 raw artifact를 바탕으로 6 layers, 5e-4, batch 4, dropout 0.1을 최종 설정으로 기록했습니다. 이는 이 자료에서의 선택 순서이며 보편적인 최적값 주장이 아닙니다.
+
+초기 실행과 최종 실행에서는 layer, learning rate와 batch size가 함께 달라졌습니다. 따라서 최종 loss의 차이를 한 파라미터가 만든 효과로 해석하지 않습니다.
 
 | 파라미터 | 비교값 | 관찰한 결과 | 근거 |
 | --- | --- | --- | --- |
@@ -120,7 +130,7 @@ dropout을 높이면 과적합을 줄일 수 있지만 작은 모델에서는 �
 
 ## 현재 재현 방법
 
-현재 환경에서는 전체 GPU 학습을 다시 돌리지 않습니다. 단위 테스트와 작은 CPU smoke로 코드가 연결되는지 확인합니다.
+과거 batch 결과는 CUDA 장치에서 남긴 학습 증적이고, 현재 확인은 CPU smoke입니다. 데이터, 모델 크기와 목적이 달라 현재 CPU 실행으로 과거 GPU 수치를 재현했다고 주장하지 않습니다.
 
 ```bash
 uv sync
@@ -132,9 +142,9 @@ uv run python scripts/smoke_train.py --output artifacts/current/smoke-result.jso
 
 CPU smoke는 하나의 synthetic batch를 5 step 반복합니다. loss 감소는 optimizer 연결을 확인할 뿐 모델 품질이나 일반화 성능을 증명하지 않습니다.
 
-`scripts/smoke_train.py`는 seed와 model 설정을 고정하고 step별 loss를 수집해 JSON으로 저장합니다. `tests/test_evidence_contract.py`는 historical GPU 결과와 현재 CPU 결과가 문서에서 섞이지 않는지도 검사합니다.
+`scripts/smoke_train.py`는 seed 42와 작은 model 설정을 고정하고 initial loss, final loss와 step별 loss를 JSON으로 저장합니다. `tests/test_evidence_contract.py`는 historical GPU와 current CPU 구분, batch commit `4fe533e` 표기를 검사합니다.
 
-같은 날 smoke를 다시 실행한 결과 날짜를 제외한 모든 field와 loss 값이 보존 JSON과 일치했습니다. script가 실행일을 기록하므로 기존 증적 파일은 바꾸지 않았습니다.
+같은 날 smoke를 다시 실행한 결과 날짜를 제외한 field와 loss 값이 보존 JSON과 일치했습니다. script가 실행일을 `run_date`에 기록하므로 기존 증적 파일은 바꾸지 않았습니다.
 
 ## 프로젝트 구조
 
