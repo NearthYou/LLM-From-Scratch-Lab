@@ -72,7 +72,7 @@ NumPy array만으로 layer cache와 gradient, SGD와 Adam을 계산했습니다.
 
 layer, learning rate, dropout 비교는 발표 표와 그래프만 보존되어 있습니다. batch 4, 8, 16 비교에는 `4fe533e`의 설정 JSON, epoch metric, summary와 dashboard가 남아 있어 원본 수치를 다시 읽을 수 있습니다.
 
-시도한 범위의 최저 validation loss와 batch 4의 raw artifact를 바탕으로 6 layers, 5e-4, batch 4, dropout 0.1을 최종 설정으로 기록했습니다. 이는 이 자료에서의 선택 순서이며 보편적인 최적값 주장이 아닙니다.
+6 layers, 5e-4, batch 4, dropout 0.1은 최종 설정으로 남아 있습니다. 발표 기록과 별도 조건의 batch artifact는 이 설정을 고른 실제 순서를 증명하지 않으므로, 함께 묶어 선택 근거로 해석하지 않습니다.
 
 초기 실행과 최종 실행에서는 layer, learning rate와 batch size가 함께 달라졌습니다. 따라서 최종 loss의 차이를 한 파라미터가 만든 효과로 해석하지 않습니다.
 
@@ -142,7 +142,9 @@ uv run python scripts/smoke_train.py --output artifacts/current/smoke-result.jso
 
 CPU smoke는 하나의 synthetic batch를 5 step 반복합니다. loss 감소는 optimizer 연결을 확인할 뿐 모델 품질이나 일반화 성능을 증명하지 않습니다.
 
-`scripts/smoke_train.py`는 seed 42와 작은 model 설정을 고정하고 initial loss, final loss와 step별 loss를 JSON으로 저장합니다. `tests/test_evidence_contract.py`는 historical GPU와 current CPU 구분, batch commit `4fe533e` 표기를 검사합니다.
+`scripts/smoke_train.py`는 seed 42와 작은 model 설정을 고정하고 initial loss, final loss와 step별 loss를 JSON으로 저장합니다. `tests/test_evidence_contract.py`는 `docs/results.md`에 `Historical result`, `Current reproduction`, `4fe533e`가 있는지만 검사합니다.
+
+이 검사는 문서의 historical과 current 표기를 지키는 범위입니다. GPU와 CPU의 장치, 데이터, 모델 차이는 이 문단과 [실험 결과](docs/results.md)에서 별도로 읽어야 합니다.
 
 같은 날 smoke를 다시 실행한 결과 날짜를 제외한 field와 loss 값이 보존 JSON과 일치했습니다. script가 실행일을 `run_date`에 기록하므로 기존 증적 파일은 바꾸지 않았습니다.
 
