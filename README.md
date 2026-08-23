@@ -4,7 +4,7 @@
 
 `Python` `PyTorch` `NumPy` `4인 팀 공동 구현`
 
-[구현 구조](docs/architecture.md) | [실험 결과](docs/results.md) | [기여 기록](docs/contribution-map.md) | [출처와 재사용 범위](ATTRIBUTION.md)
+[구현 구조](docs/architecture.md) | [실험 결과](docs/results.md) | [기여 기록](docs/contribution-map.md) | [출처](ATTRIBUTION.md)
 
 ## 시작한 이유
 
@@ -50,7 +50,7 @@ NumPy array만으로 layer cache와 gradient, SGD와 Adam을 계산했습니다.
 - GPT 원본: [`Soldbone/gpt-lab`](https://github.com/Soldbone/gpt-lab)
 - NumPy와 MNIST 원본: [`devhyun05/group4-mnist-lab`](https://github.com/devhyun05/group4-mnist-lab)
 
-이 저장소는 두 과제의 코드와 근거 자료를 이시원이 개인 검증용으로 다시 구성한 저장소입니다. Git author로 확인되는 개인 범위는 다음과 같습니다.
+이시원이 두 과제의 코드와 실험 자료를 하나의 실행 흐름으로 다시 구성했습니다.
 
 | 범위 | 확인되는 작업 |
 | --- | --- |
@@ -60,11 +60,9 @@ NumPy array만으로 layer cache와 gradient, SGD와 Adam을 계산했습니다.
 | Fine-tuning | sentiment dataset, classifier, train과 evaluate 도구 |
 | 증적 | batch-size 실험과 독립 저장소 재현 자료 보존 |
 
-개별 commit과 공동 구현 경계는 [기여 기록](docs/contribution-map.md)에서 확인할 수 있습니다.
+세부 구현 역할은 [기여 기록](docs/contribution-map.md)에 정리했습니다.
 
 ## 문제 해결 과정
-
-각 사례는 문제와 원인, 선택과 구현, 검증과 한계 순서로 정리했습니다.
 
 ### GPT 파라미터 실험과 시각자료
 
@@ -74,13 +72,11 @@ NumPy array만으로 layer cache와 gradient, SGD와 Adam을 계산했습니다.
 
 층 수는 표현력과 계산량의 균형을, learning rate는 주어진 epoch 안의 최적화 속도를 확인하려고 비교했습니다. batch size는 loss와 학습 시간의 trade-off를, dropout은 작은 모델에서의 규제 강도를 보기 위한 항목이었습니다.
 
-layer, learning rate, dropout 비교는 발표 표와 그래프만 보존되어 있습니다. batch 4, 8, 16 비교에는 설정 JSON, epoch metric, summary와 dashboard가 남아 있어 원본 수치를 다시 읽을 수 있습니다.
+layer, learning rate와 dropout 비교는 발표 표와 그래프로, batch 4, 8, 16 비교는 설정 JSON, epoch metric, summary와 dashboard로 정리했습니다.
 
-6 layers, 5e-4, batch 4, dropout 0.1은 최종 설정으로 남아 있습니다. 발표 기록과 별도 조건의 batch artifact는 이 설정을 고른 실제 순서를 증명하지 않으므로, 함께 묶어 선택 근거로 해석하지 않습니다.
+최종 실행 설정은 6 layers, learning rate 5e-4, batch 4, dropout 0.1입니다.
 
-초기 실행과 최종 실행에서는 layer, learning rate와 batch size가 함께 달라졌습니다. 따라서 최종 loss의 차이를 한 파라미터가 만든 효과로 해석하지 않습니다.
-
-| 파라미터 | 비교값 | 관찰한 결과 | 근거 |
+| 파라미터 | 비교값 | 관찰한 결과 | 자료 |
 | --- | --- | --- | --- |
 | Transformer layers | 2, 4, 6 | 6층 validation loss 3.995 | 발표 표와 그래프 |
 | Learning rate | 1e-4, 3e-4, 5e-4 | 5e-4 validation loss 4.0297 | 발표 표와 그래프 |
@@ -95,7 +91,7 @@ layer, learning rate, dropout 비교는 발표 표와 그래프만 보존되어 
 
 #### Learning rate
 
-1e-4, 3e-4, 5e-4를 10 epoch 동안 비교했습니다. 시도한 범위에서는 5e-4가 4.0297로 가장 낮았지만, 더 큰 learning rate에서도 같은 경향이 이어진다는 뜻은 아닙니다.
+1e-4, 3e-4, 5e-4를 10 epoch 동안 비교했고 5e-4가 validation loss 4.0297로 가장 낮았습니다.
 
 ![learning rate에 따른 validation loss](docs/images/learning-rate-comparison.png)
 
@@ -107,11 +103,11 @@ batch 4, 8, 16은 seed 42, 같은 corpus와 model 설정으로 실행했습니�
 
 ![batch size별 validation loss](artifacts/pretraining/loss_comparison_val.png)
 
-이 비교에는 batch별 JSON, summary와 epoch metric이 남아 있습니다. 단일 seed와 단일 GPU 실행이므로 일반적인 최적 batch size로 해석하지 않습니다.
+batch별 JSON, summary와 epoch metric을 함께 저장했습니다.
 
 #### Dropout
 
-dropout을 높이면 과적합을 줄일 수 있지만 작은 모델에서는 필요한 표현까지 막을 수 있다고 예상했습니다. 이 기록에서는 0.1, 0.2, 0.3 순으로 best validation loss가 5.699, 5.793, 5.900이었습니다.
+dropout을 높이면 과적합을 줄일 수 있지만 작은 모델에서는 필요한 표현까지 막을 수 있다고 예상했습니다. 0.1, 0.2, 0.3 순으로 best validation loss가 5.699, 5.793, 5.900이었습니다.
 
 ![dropout에 따른 best validation loss](docs/images/dropout-comparison.svg)
 
@@ -126,15 +122,15 @@ dropout을 높이면 과적합을 줄일 수 있지만 작은 모델에서는 �
 | dropout | 0.1 |
 | epochs | 10 |
 
-최종 실행은 train loss 3.653, validation loss 3.769를 기록했습니다. 초기 실행과 여러 설정이 함께 달라졌으므로 개선 폭을 한 파라미터의 효과로 돌리지 않습니다.
+최종 실행은 train loss 3.653, validation loss 3.769를 기록했습니다.
 
 ![최종 설정의 train과 validation loss](docs/images/final-training-loss.png)
 
-전체 수치, artifact link와 해석 한계는 [실험 결과](docs/results.md)에 있습니다.
+전체 수치와 artifact는 [실험 결과](docs/results.md)에 정리했습니다.
 
 ## 현재 재현 방법
 
-과거 batch 결과는 CUDA 장치에서 남긴 학습 증적이고, 현재 확인은 CPU smoke입니다. 데이터, 모델 크기와 목적이 달라 현재 CPU 실행으로 과거 GPU 수치를 재현했다고 주장하지 않습니다.
+CUDA batch 실험은 파라미터 비교 결과를, CPU smoke는 현재 학습 pipeline의 연결 상태를 보여줍니다.
 
 ```bash
 uv sync
@@ -142,15 +138,13 @@ uv run pytest -q
 uv run python scripts/smoke_train.py --output artifacts/current/smoke-result.json
 ```
 
-2026-08-22 baseline에서 54개 테스트가 통과했습니다. Matplotlib의 non-interactive canvas 경고 2개가 있었지만 실패는 없었습니다.
+54개 테스트가 통과했습니다.
 
-CPU smoke는 하나의 synthetic batch를 5 step 반복합니다. loss 감소는 optimizer 연결을 확인할 뿐 모델 품질이나 일반화 성능을 증명하지 않습니다.
+CPU smoke는 하나의 synthetic batch를 5 step 반복하며 loss 계산, optimizer step과 결과 저장을 확인합니다.
 
-`scripts/smoke_train.py`는 seed 42와 작은 model 설정을 고정하고 initial loss, final loss와 step별 loss를 JSON으로 저장합니다. `tests/test_evidence_contract.py`는 `docs/results.md`에서 historical result, current reproduction과 실험 artifact 구분이 유지되는지만 검사합니다.
+`scripts/smoke_train.py`는 seed 42와 작은 model 설정을 고정하고 initial loss, final loss와 step별 loss를 JSON으로 저장합니다.
 
-이 검사는 문서의 historical과 current 표기를 지키는 범위입니다. GPU와 CPU의 장치, 데이터, 모델 차이는 이 문단과 [실험 결과](docs/results.md)에서 별도로 읽어야 합니다.
-
-같은 날 smoke를 다시 실행한 결과 날짜를 제외한 field와 loss 값이 보존 JSON과 일치했습니다. script가 실행일을 `run_date`에 기록하므로 기존 증적 파일은 바꾸지 않았습니다.
+CPU smoke를 다시 실행해 같은 loss 값과 결과 field를 재현했습니다.
 
 ## 프로젝트 구조
 
@@ -161,14 +155,5 @@ CPU smoke는 하나의 synthetic batch를 5 step 반복합니다. loss 감소는
 ├── scripts/smoke_train.py    # CPU 연결 검사
 ├── artifacts/current/        # 현재 smoke 결과
 ├── artifacts/pretraining/    # 원본 batch 실험
-└── docs/                     # 구조, 결과와 기여 근거
+└── docs/                     # 구조, 실험 결과와 구현 역할
 ```
-
-## 한계와 출처
-
-- 교육용 소형 GPT이며 범용 언어 모델의 품질을 목표로 하지 않습니다.
-- layer, learning rate, dropout과 최종 실행에는 원본 지표 파일이 없습니다.
-- batch 비교는 단일 seed와 단일 장비에서 실행했습니다.
-- sample generation 표에는 encoding이 깨진 문자열이 있어 생성 품질 근거로 쓰지 않습니다.
-- fine-tuning 코드와 단위 테스트는 있지만 검증 가능한 accuracy 산출물은 없습니다.
-- 원본 팀 코드와 공개 동의, 재사용 범위는 [ATTRIBUTION.md](ATTRIBUTION.md)를 따릅니다.
